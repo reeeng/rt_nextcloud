@@ -1,0 +1,41 @@
+version: "3.5"
+services:
+  database:
+    image: postgres:11.4
+    environment:
+    # Default master(root) username and password (use it to create more users)
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    networks:
+      - rt-office
+    volumes:
+      - rt-office-db:/var/lib/postgresql/data
+  nextcloud:
+    build: 
+      dockerfile: nextcloud.Dockerfile
+      context: .
+    environment:
+      - POSTGRES_DB=nextcloud
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST=database
+    volumes:
+      - rt-office-nextcloud:/var/www/html
+    ports:
+      - 5002:80
+    networks:
+      - rt-office
+    depends_on:
+      - database
+networks:
+  # Network has to be created externally prior to building the app.
+  # > docker network create rt-office
+  rt-office:
+volumes:
+  # Create ext. volumes by:
+  # > docker volume create rt-office-db
+  # > docker volume create rt-office-nextcloud
+  rt-office-db:
+    external: true
+  rt-office-nextcloud:
+    external: true
