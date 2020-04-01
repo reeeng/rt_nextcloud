@@ -1,15 +1,33 @@
 version: "3.5"
 services:
   database:
-    image: postgres:11.4
+    build: 
+      dockerfile: postgres.Dockerfile
+      context: .
     environment:
-    # Default master(root) username and password (use it to create more users)
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
     networks:
       - rt-office
     volumes:
       - rt-office-db:/var/lib/postgresql/data
+  keycloak:
+    image: jboss/keycloak:9.0.2
+    ports:
+      - 5003:8080
+    environment:
+      - DB_VENDOR=postgres
+      - DB_ADDR=database
+      - DB_PORT=5432
+      - DB_DATABASE=keycloak
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - KEYCLOAK_USER=keycloak
+      - KEYCLOAK_PASSWORD=password
+    depends_on:
+      - database
+    networks:
+      - rt-office
   nextcloud:
     build: 
       dockerfile: nextcloud.Dockerfile
@@ -27,6 +45,7 @@ services:
       - rt-office
     depends_on:
       - database
+      - keycloak
 networks:
   # Network has to be created externally prior to building the app.
   # > docker network create rt-office
